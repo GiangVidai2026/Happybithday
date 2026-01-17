@@ -1,0 +1,1748 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Đào Quà Tặng Cho Gia Bảo</title>
+  <style>
+    :root{
+      --bg:#070a12;
+      --panel:#0e1728ee;
+      --panel2:#0b1220ee;
+      --line:rgba(120,160,220,.22);
+      --txt:#e9f0ff;
+      --muted:#aab7d6;
+      --accent:#58d0ff;
+      --good:#44f089;
+      --warn:#ffcf5a;
+      --bad:#ff5a7a;
+      --shadow: 0 18px 50px rgba(0,0,0,.5);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    html,body{ margin:0; height:100%; background:var(--bg); color:var(--txt); overflow:hidden; font-family:var(--sans); }
+    canvas{ display:block; width:100vw; height:100vh; background:#05070f; }
+    #ui{ position:fixed; inset:0; pointer-events:none; }
+
+    .centerWrap{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+    .panel{
+      pointer-events:auto;
+      width:min(920px, calc(100vw - 28px));
+      background:linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+      padding:22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .panel:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(900px 400px at 30% 0%, rgba(88,208,255,.14), transparent 60%),
+                  radial-gradient(700px 400px at 90% 40%, rgba(255,90,122,.10), transparent 60%);
+      pointer-events:none;
+    }
+    .panel > *{ position:relative; }
+    .panelHeader{ display:flex; gap:14px; align-items:flex-start; justify-content:space-between; border-bottom:1px solid rgba(120,160,220,.18); padding-bottom:14px; margin-bottom:14px; }
+    .title{ font-size: clamp(24px, 3.3vw, 42px); line-height:1.05; margin:0; letter-spacing:.2px; text-shadow: 0 10px 30px rgba(0,0,0,.45); }
+    .subtitle{ margin:6px 0 0; color:var(--muted); font-size:14px; line-height:1.45; }
+    .badge{
+      font-family:var(--mono);
+      font-size:12px; color:#041019;
+      background:linear-gradient(180deg, rgba(88,208,255,.95), rgba(88,208,255,.65));
+      padding:6px 10px; border-radius:999px;
+      box-shadow: 0 10px 28px rgba(88,208,255,.25);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btnRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+    .btn{
+      pointer-events:auto;
+      border:1px solid rgba(120,160,220,.25);
+      background:rgba(18,28,48,.55);
+      color:var(--txt);
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:800;
+      letter-spacing:.2px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+      box-shadow: 0 10px 25px rgba(0,0,0,.22);
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(88,208,255,.6); background:rgba(18,28,48,.78); box-shadow: 0 16px 36px rgba(0,0,0,.28); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.primary{
+      border-color: rgba(88,208,255,.65);
+      background: linear-gradient(180deg, rgba(88,208,255,.30), rgba(88,208,255,.10));
+    }
+    .btn.danger{
+      border-color: rgba(255,90,122,.55);
+      background: linear-gradient(180deg, rgba(255,90,122,.24), rgba(255,90,122,.08));
+    }
+    .btn.small{ padding:10px 12px; border-radius:12px; font-weight:800; }
+
+    .twoCol{ display:grid; grid-template-columns: 1.1fr .9fr; gap:14px; }
+    @media (max-width: 820px){ .twoCol{ grid-template-columns:1fr; } }
+    .card{
+      background: rgba(10,14,24,.52);
+      border:1px solid rgba(120,160,220,.16);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .card h3{ margin:0 0 8px; font-size:16px; letter-spacing:.2px; }
+    .card p, .card li{ color:var(--muted); font-size:14px; line-height:1.55; margin:6px 0; }
+    .list{ margin:8px 0 0; padding-left:18px; }
+    .kbd{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:2px 6px;
+      border-radius:8px;
+      background:rgba(88,208,255,.12);
+      border:1px solid rgba(88,208,255,.22);
+      color:var(--txt);
+      white-space:nowrap;
+    }
+
+    /* HUD */
+    #hud{
+      position:absolute;
+      left:12px; bottom:12px;
+      display:flex; flex-direction:column; gap:10px;
+      pointer-events:none;
+      width: min(380px, calc(100vw - 24px));
+    }
+    .hudBox{
+      background: rgba(8,12,20,.58);
+      border:1px solid rgba(120,160,220,.16);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      backdrop-filter: blur(8px);
+    }
+    .hudRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .hudRow .label{ color:var(--muted); font-size:12px; letter-spacing:.25px; }
+    .hudRow .value{ font-family:var(--mono); font-size:12px; }
+    .bar{
+      height:10px; border-radius:999px; overflow:hidden;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(120,160,220,.14);
+      box-shadow: inset 0 1px 0 rgba(0,0,0,.35);
+    }
+    .barFill{
+      height:100%;
+      width:50%;
+      background: linear-gradient(90deg, rgba(68,240,137,.92), rgba(88,208,255,.92));
+      box-shadow: 0 0 18px rgba(88,208,255,.15);
+    }
+
+    /* Bảng thống kê góc trái trên */
+    #quickStats{
+      position:absolute;
+      left:12px;
+      top:12px;
+      width:min(280px, calc(100vw - 24px));
+      pointer-events:none;
+    }
+
+    /* minimap */
+    #minimapWrap{
+      position:absolute;
+      right:12px; bottom:12px;
+      pointer-events:none;
+      background: rgba(8,12,20,.58);
+      border:1px solid rgba(120,160,220,.16);
+      border-radius:14px;
+      padding:8px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      backdrop-filter: blur(8px);
+    }
+    #minimap{ display:block; image-rendering: pixelated; border-radius:10px; background: rgba(0,0,0,.18); }
+
+    /* thông báo */
+    .tipStack{
+      position:absolute; left:12px; top:94px;
+      display:flex; flex-direction:column; gap:8px;
+      pointer-events:none;
+      width:min(440px, calc(100vw - 24px));
+    }
+    .toast{
+      background: rgba(12,18,32,.72);
+      border:1px solid rgba(120,160,220,.18);
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow: 0 14px 32px rgba(0,0,0,.30);
+      color:var(--txt);
+    }
+    .toast .t1{ font-weight:900; font-size:13px; letter-spacing:.2px; }
+    .toast .t2{ color:var(--muted); font-size:12px; margin-top:3px; }
+
+    /* Shop overlay */
+    #shopOverlay{
+      position:absolute; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      pointer-events:auto;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(6px);
+    }
+    .shopPanel{
+      width:min(960px, calc(100vw - 26px));
+      max-height: min(720px, calc(100vh - 26px));
+      overflow:auto;
+      padding:18px;
+    }
+    .tabs{ display:flex; gap:10px; margin:10px 0 12px; }
+    .tab{
+      border:1px solid rgba(120,160,220,.22);
+      background: rgba(18,28,48,.5);
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+    }
+    .tab.active{
+      border-color: rgba(88,208,255,.65);
+      background: linear-gradient(180deg, rgba(88,208,255,.22), rgba(88,208,255,.08));
+      box-shadow: 0 10px 25px rgba(88,208,255,.10);
+    }
+    .shopGrid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 820px){ .shopGrid{ grid-template-columns:1fr; } }
+    .shopItem{
+      border:1px solid rgba(120,160,220,.16);
+      background: rgba(10,14,24,.55);
+      border-radius:16px;
+      padding:12px;
+      display:flex; flex-direction:column; gap:8px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .shopItemTop{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .shopItem h4{ margin:0; font-size:15px; letter-spacing:.2px; }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(120,160,220,.18);
+      background: rgba(88,208,255,.10);
+      color: var(--txt);
+      white-space:nowrap;
+    }
+    .shopItem p{ margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .shopActions{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .hintBar{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:13px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .shopMoney{ font-family:var(--mono); color:var(--txt); }
+    .shopClose{ float:right; }
+    .dim{ color:var(--muted); }
+  </style>
+</head>
+
+<body>
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <!-- Bảng thống kê góc trái trên -->
+  <div id="quickStats" class="hudBox">
+    <div class="hudRow">
+      <div class="label">Nhiên liệu</div>
+      <div class="value" id="qsFuel">∞</div>
+    </div>
+    <div class="bar" style="margin:6px 0 8px;">
+      <div class="barFill" id="qsFuelFill" style="width:100%"></div>
+    </div>
+    <div class="hudRow">
+      <div class="label">Tiền</div>
+      <div class="value" id="qsMoney">$0</div>
+    </div>
+  </div>
+
+  <!-- HUD góc trái dưới -->
+  <div id="hud">
+    <div class="hudBox">
+      <div class="hudRow"><div class="label">Nhiên liệu</div><div class="value" id="fuelText">∞</div></div>
+      <div class="bar" style="margin-top:8px;"><div class="barFill" id="fuelFill" style="width:100%"></div></div>
+      <div style="height:8px"></div>
+      <div class="hudRow"><div class="label">Tiền</div><div class="value" id="moneyText">$0</div></div>
+      <div class="hudRow"><div class="label">Điểm</div><div class="value" id="scoreText">0</div></div>
+      <div class="hudRow"><div class="label">Mảnh quà</div><div class="value" id="shardText">0 / 5</div></div>
+      <div class="hudRow"><div class="label">Kỷ lục</div><div class="value" id="bestText">0</div></div>
+    </div>
+  </div>
+
+  <!-- Bản đồ nhỏ -->
+  <div id="minimapWrap">
+    <canvas id="minimap" width="120" height="180"></canvas>
+  </div>
+
+  <!-- Thông báo -->
+  <div class="tipStack" id="toastStack"></div>
+
+  <!-- MENU -->
+  <div class="centerWrap" id="menuWrap">
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h1 class="title">Chúc mừng sinh nhật Phan Trần Gia Bảo!</h1>
+          <div class="subtitle">GAME: <b>Đào Quà Tặng Cho Gia Bảo</b> — đào mỏ tìm quà 🎁</div>
+        </div>
+        <div class="badge">1 FILE • Canvas • JavaScript thuần</div>
+      </div>
+
+      <div class="twoCol">
+        <div class="card">
+          <h3>Cách chơi nhanh</h3>
+          <p>Đào xuống lòng đất, tìm <b>5 Mảnh Quà</b> để ghép thành món quà sinh nhật.</p>
+          <ul class="list">
+            <li><span class="kbd">WASD</span>/<span class="kbd">Phím mũi tên</span> để di chuyển</li>
+            <li><b>Đào KHÔNG tốn nhiên liệu</b> ✅ (đã bỏ cơ chế nhiên liệu)</li>
+            <li><span class="kbd">E</span> mở <b>Cửa hàng</b> khi đứng ở khu cửa hàng trên mặt đất</li>
+            <li>Nhặt đủ <b>5 mảnh</b> ⇒ <b>Chiến thắng</b> 🎉</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Mẹo</h3>
+          <p class="dim">• Than: nông • Vàng: trung • Kim cương: sâu • Bánh sinh nhật: cực hiếm nhưng bonus lớn.</p>
+          <p class="dim">• Nâng <b>Sức khoan</b> để giảm số lần đục mỗi khối.</p>
+          <p class="dim">• Vì bỏ nhiên liệu, shop tập trung vào nâng cấp & tăng tiền/điểm.</p>
+        </div>
+      </div>
+
+      <div class="btnRow">
+        <button class="btn primary" id="btnStart">Bắt đầu</button>
+        <button class="btn" id="btnHow">Hướng dẫn</button>
+        <button class="btn" id="btnCredits">Ghi công</button>
+        <button class="btn danger" id="btnReset">Xóa dữ liệu lưu</button>
+      </div>
+
+      <div class="subtitle" style="margin-top:12px;">
+        Lưu ý: Màn chiến thắng có nhạc beep tạo bằng WebAudio (không dùng mp3).
+      </div>
+    </div>
+  </div>
+
+  <!-- HƯỚNG DẪN -->
+  <div class="centerWrap" id="howWrap" style="display:none;">
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h1 class="title">Hướng dẫn</h1>
+          <div class="subtitle">Mục tiêu: thu đủ <b>5 Mảnh Quà</b> để chiến thắng.</div>
+        </div>
+        <div class="badge">Điều khiển</div>
+      </div>
+      <div class="card">
+        <ul class="list">
+          <li><b>Di chuyển</b>: <span class="kbd">WASD</span> hoặc <span class="kbd">Phím mũi tên</span></li>
+          <li><b>Đào</b>: khi bạn cố di chuyển vào khối theo hướng đó ⇒ tự động đào
+            <ul class="list">
+              <li>Đất: 1 lần</li><li>Than: 2 lần</li><li>Vàng: 3 lần</li><li>Kim cương: 4 lần</li><li>Bánh: 2 lần</li><li>Đá nền: không phá</li>
+            </ul>
+          </li>
+          <li><b>Nhiên liệu</b>: đã <b>loại bỏ hoàn toàn</b> ✅ (không tụt khi đào, không tụt khi đứng yên).</li>
+          <li><b>Cửa hàng</b>: đứng ở khu cửa hàng (mặt đất) và nhấn <span class="kbd">E</span> để mở.</li>
+        </ul>
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="btnHowBack">Quay lại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GHI CÔNG -->
+  <div class="centerWrap" id="creditsWrap" style="display:none;">
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h1 class="title">Ghi công</h1>
+          <div class="subtitle">Làm bằng ❤️ dành tặng Gia Bảo</div>
+        </div>
+        <div class="badge">🎁🎉</div>
+      </div>
+      <div class="card">
+        <p>Chúc Gia Bảo tuổi mới luôn vui vẻ, khỏe mạnh, học giỏi, gặp nhiều may mắn và luôn được yêu thương!</p>
+        <p class="dim">Công nghệ: Canvas • JavaScript thuần • Âm thanh: WebAudio oscillator</p>
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="btnCreditsBack">Quay lại</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHIẾN THẮNG -->
+  <div class="centerWrap" id="victoryWrap" style="display:none;">
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h1 class="title">Chúc mừng sinh nhật Phan Trần Gia Bảo!</h1>
+          <div class="subtitle">Bạn đã nhặt đủ 5 mảnh và ghép được món quà 🎁</div>
+        </div>
+        <div class="badge" id="victoryScoreBadge">Điểm: 0</div>
+      </div>
+      <div class="card">
+        <p id="victoryMsg" style="margin:0; color:var(--muted);">🎉 Chúc Gia Bảo luôn rực rỡ như pháo hoa hôm nay!</p>
+      </div>
+      <div class="btnRow">
+        <button class="btn primary" id="btnPlayAgain">Chơi lại</button>
+        <button class="btn" id="btnBackMenu">Về menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CỬA HÀNG -->
+  <div id="shopOverlay">
+    <div class="panel shopPanel">
+      <button class="btn small shopClose" id="btnShopClose">Đóng (Esc)</button>
+      <div class="panelHeader" style="margin-top:6px;">
+        <div>
+          <h1 class="title" style="font-size:28px;">Cửa hàng mặt đất</h1>
+          <div class="subtitle">Nhấn <span class="kbd">E</span> hoặc <span class="kbd">Esc</span> để đóng. Mua đồ / nâng cấp bằng tiền.</div>
+        </div>
+        <div class="badge">Nhấn E</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="tabBuy">Mua</div>
+        <div class="tab" id="tabUpg">Nâng cấp</div>
+      </div>
+
+      <div class="hintBar">
+        <div>Tiền: <span class="shopMoney" id="shopMoney">$0</span></div>
+        <div class="dim">Tip: Sức khoan giảm số lần đục, Tốc độ giúp lướt nhanh.</div>
+      </div>
+
+      <div style="height:12px"></div>
+      <div id="shopBuyPane" class="shopGrid"></div>
+      <div id="shopUpgPane" class="shopGrid" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* =========================
+     CẤU HÌNH
+  ========================= */
+  const TILE = 20;
+  const COLS = 30;
+  const ROWS = 140;
+  const SKY_ROWS = 3;
+  const VIEW_MARGIN_TILES = 2;
+  const SAVE_KEY = "giabao_mine_gift_save_v4_nofuel";
+
+  const TYPES = {
+    EMPTY: 0, DIRT: 1, COAL: 2, GOLD: 3, DIAMOND: 4, CAKE: 5, BEDROCK: 6, SHARD: 7
+  };
+
+  // số lần đục cơ bản (sẽ bị giảm bởi nâng cấp "Sức khoan")
+  const BASE_HITS = {
+    [TYPES.DIRT]: 1,
+    [TYPES.COAL]: 2,
+    [TYPES.GOLD]: 3,
+    [TYPES.DIAMOND]: 4,
+    [TYPES.CAKE]: 2,
+    [TYPES.BEDROCK]: 999,
+    [TYPES.SHARD]: 2,
+  };
+
+  const VALUE = {
+    [TYPES.DIRT]: 0,
+    [TYPES.COAL]: 8,
+    [TYPES.GOLD]: 22,
+    [TYPES.DIAMOND]: 55,
+    [TYPES.CAKE]: 140,
+    [TYPES.SHARD]: 0,
+  };
+
+  const SCORE_GAIN = {
+    [TYPES.DIRT]: 1,
+    [TYPES.COAL]: 6,
+    [TYPES.GOLD]: 14,
+    [TYPES.DIAMOND]: 32,
+    [TYPES.CAKE]: 90,
+    [TYPES.SHARD]: 120,
+  };
+
+  const POPUPS = [
+    "🎉 Chúc mừng sinh nhật Gia Bảo!",
+    "🎁 Thêm một bước gần món quà rồi!",
+    "✨ Gia Bảo luôn tỏa sáng nhé!",
+    "🍀 Tuổi mới may mắn ngập tràn!",
+    "💪 Mạnh mẽ – tự tin – bứt phá!",
+    "🌟 Mỗi mảnh quà là một điều tốt đẹp!",
+    "😄 Cười nhiều hơn mỗi ngày nha!",
+    "🚀 Ước mơ bay cao!",
+    "🧠 Học giỏi – chơi vui – hạnh phúc!",
+    "❤️ Luôn được yêu thương và ủng hộ!",
+  ];
+
+  /* =========================
+     CANVAS
+  ========================= */
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  let DPR = 1;
+
+  function resize() {
+    DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(window.innerWidth * DPR);
+    canvas.height = Math.floor(window.innerHeight * DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  /* =========================
+     UI
+  ========================= */
+  const menuWrap = document.getElementById("menuWrap");
+  const howWrap = document.getElementById("howWrap");
+  const creditsWrap = document.getElementById("creditsWrap");
+  const victoryWrap = document.getElementById("victoryWrap");
+
+  const fuelText = document.getElementById("fuelText");
+  const fuelFill = document.getElementById("fuelFill");
+  const moneyText = document.getElementById("moneyText");
+  const scoreText = document.getElementById("scoreText");
+  const shardText = document.getElementById("shardText");
+  const bestText = document.getElementById("bestText");
+
+  const qsFuel = document.getElementById("qsFuel");
+  const qsFuelFill = document.getElementById("qsFuelFill");
+  const qsMoney = document.getElementById("qsMoney");
+
+  const toastStack = document.getElementById("toastStack");
+  const minimapCanvas = document.getElementById("minimap");
+  const mm = minimapCanvas.getContext("2d");
+
+  const shopOverlay = document.getElementById("shopOverlay");
+  const shopMoneyEl = document.getElementById("shopMoney");
+  const tabBuy = document.getElementById("tabBuy");
+  const tabUpg = document.getElementById("tabUpg");
+  const shopBuyPane = document.getElementById("shopBuyPane");
+  const shopUpgPane = document.getElementById("shopUpgPane");
+
+  const victoryScoreBadge = document.getElementById("victoryScoreBadge");
+  const victoryMsg = document.getElementById("victoryMsg");
+
+  /* =========================
+     STATE
+  ========================= */
+  const STATE = { MENU:"MENU", HOW:"HOW", CREDITS:"CREDITS", PLAY:"PLAY", SHOP:"SHOP", VICTORY:"VICTORY" };
+  let gameState = STATE.MENU;
+
+  function showOnly(which) {
+    menuWrap.style.display = (which === STATE.MENU) ? "flex" : "none";
+    howWrap.style.display = (which === STATE.HOW) ? "flex" : "none";
+    creditsWrap.style.display = (which === STATE.CREDITS) ? "flex" : "none";
+    victoryWrap.style.display = (which === STATE.VICTORY) ? "flex" : "none";
+  }
+  function setState(s) {
+    gameState = s;
+    showOnly(s);
+    if (s !== STATE.SHOP) shopOverlay.style.display = "none";
+  }
+
+  /* =========================
+     SAVE
+  ========================= */
+  const defaultSave = () => ({
+    money: 0,
+    bestScore: 0,
+    upgrades: { tocdo: 0, suckhoan: 0 }
+  });
+  let save = defaultSave();
+
+  function loadSave() {
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw){ save = defaultSave(); return; }
+      const p = JSON.parse(raw);
+      save = defaultSave();
+      if (typeof p.money === "number") save.money = Math.max(0, p.money|0);
+      if (typeof p.bestScore === "number") save.bestScore = Math.max(0, p.bestScore|0);
+      if (p.upgrades && typeof p.upgrades === "object") {
+        save.upgrades.tocdo = Math.max(0, (p.upgrades.tocdo|0));
+        save.upgrades.suckhoan = Math.max(0, (p.upgrades.suckhoan|0));
+      }
+    } catch(e){ save = defaultSave(); }
+  }
+  function storeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+  function resetSave(){
+    localStorage.removeItem(SAVE_KEY);
+    loadSave();
+    toast("Đã xóa dữ liệu", "Money / nâng cấp / kỷ lục đã được reset.");
+  }
+  loadSave();
+
+  /* =========================
+     INPUT
+  ========================= */
+  const keys = new Set();
+  let justPressed = new Set();
+
+  window.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (!keys.has(k)) justPressed.add(k);
+    keys.add(k);
+    if (["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)) e.preventDefault();
+    if (gameState === STATE.SHOP && (k === "escape" || k === "e")) closeShop();
+  }, {passive:false});
+  window.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
+
+  const pressed = (k) => keys.has(k);
+  const tapped  = (k) => justPressed.has(k);
+
+  /* =========================
+     WORLD + MAP
+  ========================= */
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const rand = ()=>Math.random();
+  const randi=(a,b)=> a + Math.floor(Math.random()*(b-a+1));
+
+  function hash2(x,y){
+    let n = x*374761393 + y*668265263;
+    n = (n ^ (n>>13)) * 1274126177;
+    n = n ^ (n>>16);
+    return (n>>>0) / 4294967295;
+  }
+  function noise(x,y){
+    const x0 = Math.floor(x), y0 = Math.floor(y);
+    const fx = x - x0, fy = y - y0;
+    const a = hash2(x0,y0);
+    const b = hash2(x0+1,y0);
+    const c = hash2(x0,y0+1);
+    const d = hash2(x0+1,y0+1);
+    const u = fx*fx*(3-2*fx);
+    const v = fy*fy*(3-2*fy);
+    const ab = a + (b-a)*u;
+    const cd = c + (d-c)*u;
+    return ab + (cd-ab)*v;
+  }
+
+  let tiles = new Array(ROWS);
+  let tileHP = new Array(ROWS);
+
+  const shopZone = { x0: 11, x1: 18, y0: SKY_ROWS, y1: SKY_ROWS+2 };
+
+  function genWorld() {
+    tiles = new Array(ROWS);
+    tileHP = new Array(ROWS);
+
+    for (let y=0;y<ROWS;y++){
+      tiles[y] = new Uint8Array(COLS);
+      tileHP[y] = new Uint16Array(COLS);
+      for (let x=0;x<COLS;x++){
+        let t = TYPES.EMPTY;
+        if (x===0 || x===COLS-1 || y===ROWS-1) t = TYPES.BEDROCK;
+        else if (y < SKY_ROWS) t = TYPES.EMPTY;
+        else t = TYPES.DIRT;
+        if (y === SKY_ROWS && x>=shopZone.x0 && x<=shopZone.x1) t = TYPES.EMPTY;
+        tiles[y][x] = t;
+      }
+    }
+
+    for (let y=SKY_ROWS+8; y<ROWS-6; y++){
+      for (let x=2; x<COLS-2; x++){
+        const inShop = (x>=shopZone.x0-1 && x<=shopZone.x1+1 && y<=shopZone.y1+10);
+        if (inShop) continue;
+        const n = noise(x*0.22, y*0.18);
+        const depth = y/ROWS;
+        const caveChance = 0.08 + depth*0.08;
+        if (n > 0.72 && rand() < caveChance) tiles[y][x] = TYPES.EMPTY;
+      }
+    }
+
+    for (let y=SKY_ROWS; y<ROWS-2; y++){
+      for (let x=1; x<COLS-1; x++){
+        if (tiles[y][x] !== TYPES.DIRT) continue;
+        const depth = y;
+        const p = rand();
+        if (depth > 10 && p < 0.0016){ tiles[y][x] = TYPES.CAKE; continue; }
+        if (depth >= 6 && depth <= 40 && p < 0.10){ tiles[y][x] = TYPES.COAL; continue; }
+        if (depth >= 30 && depth <= 90 && p < 0.06){ tiles[y][x] = TYPES.GOLD; continue; }
+        if (depth >= 75 && p < 0.045){ tiles[y][x] = TYPES.DIAMOND; continue; }
+      }
+    }
+
+    const used = new Set();
+    let tries=0, placed=0;
+    while (placed<5 && tries<12000){
+      tries++;
+      const sx=randi(2,COLS-3);
+      const sy=randi(15,110);
+      const key=sx+","+sy;
+      const inShop=(sx>=shopZone.x0 && sx<=shopZone.x1 && sy<=shopZone.y1+10);
+      if(inShop||used.has(key)) continue;
+      if(tiles[sy][sx]===TYPES.BEDROCK) continue;
+      if (tiles[sy][sx]===TYPES.EMPTY) continue;
+      used.add(key);
+      tiles[sy][sx]=TYPES.SHARD;
+      placed++;
+    }
+
+    const shaftX = Math.floor((shopZone.x0+shopZone.x1)/2);
+    for (let y=SKY_ROWS; y<SKY_ROWS+9; y++) tiles[y][shaftX]=TYPES.EMPTY;
+
+    for (let y=0;y<ROWS;y++){
+      for (let x=0;x<COLS;x++){
+        const t = tiles[y][x];
+        if (t === TYPES.EMPTY) tileHP[y][x]=0;
+        else if (t === TYPES.BEDROCK) tileHP[y][x]=65535;
+        else tileHP[y][x] = (BASE_HITS[t]||1) * 80;
+      }
+    }
+
+    rebuildMinimapBase();
+  }
+
+  /* =========================
+     MINIMAP
+  ========================= */
+  const mmBase = document.createElement("canvas");
+  mmBase.width = COLS;
+  mmBase.height = ROWS;
+  const mmBaseCtx = mmBase.getContext("2d");
+
+  function typeToMiniColor(t, y){
+    if (t === TYPES.EMPTY) return [0,0,0,0];
+    if (t === TYPES.BEDROCK) return [36,44,66,255];
+    if (t === TYPES.DIRT){
+      const k = clamp(y/ROWS,0,1);
+      return [110+Math.floor(k*45), 72+Math.floor(k*24), 42+Math.floor(k*14), 255];
+    }
+    if (t === TYPES.COAL) return [28,28,38,255];
+    if (t === TYPES.GOLD) return [220,185,70,255];
+    if (t === TYPES.DIAMOND) return [90,230,255,255];
+    if (t === TYPES.CAKE) return [255,105,180,255];
+    if (t === TYPES.SHARD) return [165,125,255,255];
+    return [200,200,200,255];
+  }
+
+  function rebuildMinimapBase(){
+    const img = mmBaseCtx.createImageData(COLS, ROWS);
+    const d = img.data;
+    let i=0;
+    for (let y=0;y<ROWS;y++){
+      for (let x=0;x<COLS;x++){
+        const c = typeToMiniColor(tiles[y][x], y);
+        d[i++]=c[0]; d[i++]=c[1]; d[i++]=c[2]; d[i++]=c[3];
+      }
+    }
+    mmBaseCtx.putImageData(img,0,0);
+  }
+  function updateMinimapPixel(x,y){
+    const c = typeToMiniColor(tiles[y][x], y);
+    const img = mmBaseCtx.createImageData(1,1);
+    img.data[0]=c[0]; img.data[1]=c[1]; img.data[2]=c[2]; img.data[3]=c[3];
+    mmBaseCtx.putImageData(img,x,y);
+  }
+  function drawMinimap(){
+    mm.clearRect(0,0,minimapCanvas.width,minimapCanvas.height);
+    mm.imageSmoothingEnabled = false;
+    mm.drawImage(mmBase,0,0,COLS,ROWS,0,0,minimapCanvas.width,minimapCanvas.height);
+
+    const px = (player.x/(COLS*TILE))*minimapCanvas.width;
+    const py = (player.y/(ROWS*TILE))*minimapCanvas.height;
+
+    mm.fillStyle="rgba(255,90,122,0.95)";
+    mm.fillRect(Math.floor(px)-2, Math.floor(py)-2, 4,4);
+    mm.strokeStyle="rgba(255,255,255,0.85)";
+    mm.strokeRect(Math.floor(px)-3, Math.floor(py)-3, 6,6);
+
+    mm.strokeStyle="rgba(88,208,255,0.55)";
+    const sx0=(shopZone.x0/COLS)*minimapCanvas.width;
+    const sx1=((shopZone.x1+1)/COLS)*minimapCanvas.width;
+    const sy0=(shopZone.y0/ROWS)*minimapCanvas.height;
+    const sy1=((shopZone.y1+1)/ROWS)*minimapCanvas.height;
+    mm.strokeRect(Math.floor(sx0),Math.floor(sy0),Math.floor(sx1-sx0),Math.floor(sy1-sy0));
+  }
+
+  /* =========================
+     PLAYER + CAMERA
+  ========================= */
+  const PLAYER_SIZE = Math.floor(TILE*0.88);
+  const player = {
+    x:TILE*Math.floor(COLS/2),
+    y:TILE*(SKY_ROWS-1)-PLAYER_SIZE,
+    w:PLAYER_SIZE, h:PLAYER_SIZE,
+    vx:0, vy:0,
+    shards:0, score:0
+  };
+
+  function applyStartStats(){
+    player.shards=0; player.score=0;
+    player.vx=0; player.vy=0;
+    player.x = TILE*Math.floor(COLS/2);
+    player.y = TILE*(SKY_ROWS-1)-PLAYER_SIZE;
+  }
+
+  const camera = { x:0, y:0 };
+  let shakeT=0, shakePower=0;
+  function addShake(power=6, t=0.12){
+    shakePower = Math.max(shakePower, power);
+    shakeT = Math.max(shakeT, t);
+  }
+  function smoothFollow(dt){
+    const tx = player.x - (window.innerWidth/2) + player.w/2;
+    const ty = player.y - (window.innerHeight/2) + player.h/2;
+
+    const maxX = COLS*TILE - window.innerWidth;
+    const maxY = ROWS*TILE - window.innerHeight;
+
+    const targetX = clamp(tx, 0, Math.max(0,maxX));
+    const targetY = clamp(ty, 0, Math.max(0,maxY));
+
+    const k = 1 - Math.pow(0.001, dt);
+    camera.x += (targetX - camera.x)*k;
+    camera.y += (targetY - camera.y)*k;
+
+    if (shakeT>0) shakeT = Math.max(0, shakeT - dt);
+    else shakePower = 0;
+  }
+
+  /* =========================
+     COLLISION
+  ========================= */
+  function collides(){
+    const x0 = Math.floor(player.x / TILE);
+    const x1 = Math.floor((player.x + player.w) / TILE);
+    const y0 = Math.floor(player.y / TILE);
+    const y1 = Math.floor((player.y + player.h) / TILE);
+
+    for (let y=y0; y<=y1; y++){
+      for (let x=x0; x<=x1; x++){
+        if (x<0||x>=COLS||y<0||y>=ROWS) return true;
+        if (tiles[y][x] !== TYPES.EMPTY){
+          const tx = x*TILE, ty = y*TILE;
+          if (!(player.x+player.w<=tx || player.x>=tx+TILE || player.y+player.h<=ty || player.y>=ty+TILE)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /* =========================
+     MINING (ĐÃ BỎ NHIÊN LIỆU HOÀN TOÀN)
+  ========================= */
+  const mining = { cooldown:0 };
+  function drillReduction(){ return save.upgrades.suckhoan; }
+  function effectiveHits(type){ return Math.max(1, (BASE_HITS[type]||1) - drillReduction()); }
+
+  function ensureTileHPMatches(type,x,y){
+    const cur = tileHP[y][x];
+    if (cur===0 || type===TYPES.BEDROCK) return;
+
+    const baseInit = (BASE_HITS[type]||1)*80;
+    const effInit  = effectiveHits(type)*80;
+
+    if (baseInit<=0) return;
+    const progress = 1 - (cur / baseInit);
+    tileHP[y][x] = Math.max(1, Math.round(effInit*(1-progress)));
+  }
+
+  // KHÔNG dùng fuel: đào luôn được (trừ bedrock)
+  function tryMine(dirX, dirY){
+    const cx = player.x + player.w/2;
+    const cy = player.y + player.h/2;
+    const tx = Math.floor((cx + dirX*(player.w/2 + 6)) / TILE);
+    const ty = Math.floor((cy + dirY*(player.h/2 + 6)) / TILE);
+    if (tx<0||tx>=COLS||ty<0||ty>=ROWS) return false;
+
+    const t = tiles[ty][tx];
+    if (t === TYPES.EMPTY) return false;
+
+    if (t === TYPES.BEDROCK){
+      if (mining.cooldown<=0) toast("Đá nền", "Không thể phá đá nền.");
+      mining.cooldown = 0.12;
+      addShake(4,0.08);
+      return true;
+    }
+
+    ensureTileHPMatches(t,tx,ty);
+
+    tileHP[ty][tx] = Math.max(0, tileHP[ty][tx] - 80);
+
+    spawnDigPuffs(tx*TILE + TILE/2, ty*TILE + TILE/2, t);
+    addShake(5,0.08);
+
+    if (tileHP[ty][tx] <= 0){
+      tiles[ty][tx] = TYPES.EMPTY;
+      tileHP[ty][tx] = 0;
+      updateMinimapPixel(tx,ty);
+
+      if (t === TYPES.SHARD){
+        player.shards++;
+        player.score += SCORE_GAIN[t];
+        toast("🎁 Nhặt được Mảnh Quà!", randomPopup());
+        if (player.shards >= 5) triggerVictory();
+      } else {
+        const m = VALUE[t]||0;
+        const s = SCORE_GAIN[t]||0;
+        player.score += s;
+        if (m>0){
+          save.money += m;
+          toast(`+${m} tiền`, randomPopup());
+          storeSave();
+        } else {
+          toast("Đục đất", randomPopup());
+        }
+      }
+    }
+
+    mining.cooldown = 0.06;
+    return true;
+  }
+
+  /* =========================
+     SHOP (Fuel bỏ => Shop “Mua” đổi thành “Mua bonus/tiện ích”)
+  ========================= */
+  let shopTab="BUY";
+  function inShopArea(){
+    const cx=(player.x+player.w/2)/TILE;
+    const cy=(player.y+player.h/2)/TILE;
+    return (cx>=shopZone.x0 && cx<=shopZone.x1+1 && cy>=shopZone.y0 && cy<=shopZone.y1+1);
+  }
+  function openShop(){
+    if (gameState!==STATE.PLAY) return;
+    shopOverlay.style.display="flex";
+    gameState=STATE.SHOP;
+    renderShop();
+  }
+  function closeShop(){
+    if (gameState!==STATE.SHOP) return;
+    shopOverlay.style.display="none";
+    gameState=STATE.PLAY;
+  }
+  function setShopTab(tab){
+    shopTab=tab;
+    tabBuy.classList.toggle("active",tab==="BUY");
+    tabUpg.classList.toggle("active",tab==="UPG");
+    shopBuyPane.style.display = (tab==="BUY")?"grid":"none";
+    shopUpgPane.style.display = (tab==="UPG")?"grid":"none";
+    renderShop();
+  }
+  tabBuy.addEventListener("click",()=>setShopTab("BUY"));
+  tabUpg.addEventListener("click",()=>setShopTab("UPG"));
+  document.getElementById("btnShopClose").addEventListener("click",closeShop);
+
+  function shopItemHTML({title,desc,price,pill,onBuy,disabledReason, buyText="Mua"}){
+    const wrap=document.createElement("div");
+    wrap.className="shopItem";
+    const top=document.createElement("div"); top.className="shopItemTop";
+    const h=document.createElement("h4"); h.textContent=title;
+    const p=document.createElement("div"); p.className="pill"; p.textContent=pill;
+    top.appendChild(h); top.appendChild(p);
+
+    const d=document.createElement("p"); d.textContent=desc;
+
+    const act=document.createElement("div"); act.className="shopActions";
+    const priceEl=document.createElement("div");
+    priceEl.className="value"; priceEl.style.fontFamily="var(--mono)";
+    priceEl.textContent=`Giá: $${price}`;
+
+    const btn=document.createElement("button");
+    btn.className="btn small primary";
+    btn.textContent=buyText;
+
+    if (disabledReason){
+      btn.className="btn small"; btn.textContent=disabledReason; btn.disabled=true; btn.style.opacity=.75;
+    } else if (save.money < price){
+      btn.className="btn small"; btn.textContent="Không đủ tiền"; btn.disabled=true; btn.style.opacity=.75;
+    }
+
+    btn.addEventListener("click",()=>{
+      if(btn.disabled) return;
+      if(save.money<price) return;
+      save.money-=price;
+      onBuy();
+      storeSave();
+      toast("Mua thành công!", "✅ Đã cập nhật.");
+      renderShop();
+    });
+
+    act.appendChild(priceEl);
+    act.appendChild(btn);
+
+    wrap.appendChild(top);
+    wrap.appendChild(d);
+    wrap.appendChild(act);
+    return wrap;
+  }
+
+  function renderShop(){
+    shopMoneyEl.textContent="$"+save.money;
+    shopBuyPane.innerHTML="";
+    shopUpgPane.innerHTML="";
+
+    shopBuyPane.appendChild(shopItemHTML({
+      title:"Bùa may mắn",
+      desc:"+120 điểm ngay lập tức (mua vui).",
+      price:80,
+      pill:"+Điểm",
+      onBuy:()=>{ player.score += 120; }
+    }));
+
+    shopBuyPane.appendChild(shopItemHTML({
+      title:"Gợi ý mảnh quà",
+      desc:"Hiện thông báo 'Hướng gần nhất' trong 8 giây.",
+      price:120,
+      pill:"Trợ giúp",
+      onBuy:()=>{ hintNearestShard(8.0); }
+    }));
+
+    const lvTocdo=save.upgrades.tocdo;
+    const lvKhoan=save.upgrades.suckhoan;
+
+    const priceTocdo= 90 + lvTocdo*70;
+    const priceKhoan= 140 + lvKhoan*120;
+
+    shopUpgPane.appendChild(shopItemHTML({
+      title:"Nâng cấp Tốc độ",
+      desc:"Di chuyển nhanh hơn (tăng gia tốc & tốc độ tối đa).",
+      price:priceTocdo,
+      pill:`Cấp ${lvTocdo}`,
+      onBuy:()=>{ save.upgrades.tocdo++; }
+    }));
+
+    shopUpgPane.appendChild(shopItemHTML({
+      title:"Nâng cấp Sức khoan",
+      desc:"Giảm số lần đục để phá khối (tối thiểu 1 lần).",
+      price:priceKhoan,
+      pill:`Cấp ${lvKhoan}`,
+      onBuy:()=>{ save.upgrades.suckhoan++; }
+    }));
+  }
+
+  /* =========================
+     TOASTS
+  ========================= */
+  const toasts=[];
+  function toast(title,detail){
+    toasts.push({title,detail,t:0,life:2.2});
+    renderToasts();
+  }
+  function randomPopup(){ return POPUPS[randi(0,POPUPS.length-1)]; }
+  function renderToasts(){
+    toastStack.innerHTML="";
+    const show=toasts.slice(-4);
+    for(const it of show){
+      const div=document.createElement("div");
+      div.className="toast";
+      const t1=document.createElement("div"); t1.className="t1"; t1.textContent=it.title;
+      const t2=document.createElement("div"); t2.className="t2"; t2.textContent=it.detail;
+      div.appendChild(t1); div.appendChild(t2);
+      toastStack.appendChild(div);
+    }
+  }
+
+  /* =========================
+     PARTICLES
+  ========================= */
+  const particles=[];
+  const confetti=[];
+  const sparkles=[];
+  function spawnDigPuffs(x,y,type){
+    const n=12;
+    for(let i=0;i<n;i++){
+      particles.push({
+        x,y,
+        vx:(Math.random()*2-1)*95,
+        vy:(Math.random()*-1)*140 - 30,
+        life:0.35+Math.random()*0.28,
+        t:0,
+        size:2+Math.random()*4,
+        type
+      });
+    }
+    if(type===TYPES.DIAMOND || type===TYPES.SHARD || type===TYPES.CAKE){
+      const m = 14;
+      for(let i=0;i<m;i++){
+        sparkles.push({
+          x,y,
+          vx:(Math.random()*2-1)*190,
+          vy:(Math.random()*-1)*240 - 40,
+          g:760,
+          life:0.55+Math.random()*0.35,
+          t:0,
+          s:1+Math.random()*2.6,
+          hue: (type===TYPES.DIAMOND)? 190 : (type===TYPES.CAKE? 325 : 265)
+        });
+      }
+    }
+  }
+  function spawnConfettiBurst(cx,cy,count=160){
+    for(let i=0;i<count;i++){
+      confetti.push({
+        x:cx+(Math.random()*2-1)*30,
+        y:cy+(Math.random()*2-1)*22,
+        vx:(Math.random()*2-1)*260,
+        vy:(Math.random()*-1)*380 - 50,
+        g:650 + Math.random()*260,
+        life:1.9+Math.random()*1.5,
+        t:0,
+        s:3+Math.random()*5,
+        rot:Math.random()*Math.PI*2,
+        vr:(Math.random()*2-1)*10,
+        hue: (i*23 + Math.random()*30) % 360
+      });
+    }
+  }
+
+  /* =========================
+     AUDIO
+  ========================= */
+  let audioCtx=null;
+  function ensureAudio(){
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==="suspended") audioCtx.resume();
+  }
+  function beep(freq,dur=0.10,when=0){
+    if(!audioCtx) return;
+    const t0=audioCtx.currentTime+when;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type="square";
+    osc.frequency.setValueAtTime(freq,t0);
+    gain.gain.setValueAtTime(0.0001,t0);
+    gain.gain.exponentialRampToValueAtTime(0.14,t0+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  function playVictoryMelody(){
+    const notes=[523.25,659.25,783.99,659.25,880,783.99,659.25,523.25];
+    const durs =[0.12,  0.12,  0.14,  0.10,  0.14,0.12,  0.12,  0.18];
+    let t=0.02;
+    for(let i=0;i<notes.length;i++){ beep(notes[i],durs[i],t); t+=durs[i]+0.03; }
+    beep(1046.5,0.16,t+0.03);
+  }
+
+  /* =========================
+     VICTORY
+  ========================= */
+  let melodyTimer=0;
+  function triggerVictory(){
+    if(player.score>save.bestScore) save.bestScore=player.score;
+    storeSave();
+    setState(STATE.VICTORY);
+    victoryScoreBadge.textContent="Điểm: "+player.score;
+    victoryMsg.textContent=randomPopup();
+    const cx=camera.x+window.innerWidth/2, cy=camera.y+window.innerHeight*0.22;
+    spawnConfettiBurst(cx,cy,260);
+    ensureAudio(); playVictoryMelody();
+    melodyTimer=0.85;
+  }
+
+  /* =========================
+     ĐỒ HỌA
+  ========================= */
+  function drawBackground(){
+    const w=window.innerWidth, h=window.innerHeight;
+    const g = ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,"#07102a");
+    g.addColorStop(0.55,"#070a12");
+    g.addColorStop(1,"#04050b");
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,w,h);
+
+    const t = performance.now()*0.00015;
+    const blobs = [
+      {x: w*0.20 + Math.sin(t*1.6)*40, y: h*0.18 + Math.cos(t*1.2)*22, r: 260, c:"rgba(88,208,255,0.10)"},
+      {x: w*0.78 + Math.cos(t*1.1)*35, y: h*0.28 + Math.sin(t*1.4)*18, r: 220, c:"rgba(255,90,122,0.08)"},
+      {x: w*0.50 + Math.sin(t*0.9)*28, y: h*0.10 + Math.cos(t*1.7)*16, r: 180, c:"rgba(68,240,137,0.06)"}
+    ];
+    for(const b of blobs){
+      const rg = ctx.createRadialGradient(b.x,b.y, 0, b.x,b.y, b.r);
+      rg.addColorStop(0,b.c);
+      rg.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=rg;
+      ctx.fillRect(b.x-b.r,b.y-b.r,b.r*2,b.r*2);
+    }
+
+    ctx.save();
+    ctx.globalAlpha=0.55;
+    ctx.fillStyle="rgba(255,255,255,0.95)";
+    const count=75;
+    for(let i=0;i<count;i++){
+      const sx = (i*9973) % w;
+      const sy = (i*6271) % Math.max(1, Math.floor(h*0.52));
+      const r = (i%11===0)?2:1;
+      ctx.fillRect(sx,sy,r,r);
+    }
+    ctx.restore();
+  }
+
+  function roundRect(c, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    c.beginPath();
+    c.moveTo(x+rr,y);
+    c.arcTo(x+w,y,x+w,y+h,rr);
+    c.arcTo(x+w,y+h,x,y+h,rr);
+    c.arcTo(x,y+h,x,y,rr);
+    c.arcTo(x,y,x+w,y,rr);
+    c.closePath();
+  }
+
+  function tileColor(type, y, x){
+    if(type===TYPES.BEDROCK) return "#23304a";
+    if(type===TYPES.COAL) return "#1c1e26";
+    if(type===TYPES.GOLD) return "#d7b44a";
+    if(type===TYPES.DIAMOND) return "#4be6ff";
+    if(type===TYPES.CAKE) return "#ff5fb0";
+    if(type===TYPES.SHARD) return "#a879ff";
+
+    const k = clamp(y/ROWS,0,1);
+    const strata = Math.floor(k*6);
+    let base;
+    if (strata===0) base=[128, 86, 52];
+    else if (strata===1) base=[140, 90, 50];
+    else if (strata===2) base=[150, 94, 48];
+    else if (strata===3) base=[162, 98, 46];
+    else if (strata===4) base=[172, 102, 44];
+    else base=[182, 108, 46];
+
+    const v=(hash2(x,y)-0.5)*14;
+    const r = clamp(base[0]+v,0,255)|0;
+    const g = clamp(base[1]+v*0.65,0,255)|0;
+    const b = clamp(base[2]+v*0.45,0,255)|0;
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function drawWorld(){
+    const w=window.innerWidth, h=window.innerHeight;
+    const startCol = clamp(Math.floor(camera.x / TILE) - VIEW_MARGIN_TILES, 0, COLS-1);
+    const endCol   = clamp(Math.floor((camera.x + w) / TILE) + VIEW_MARGIN_TILES, 0, COLS-1);
+    const startRow = clamp(Math.floor(camera.y / TILE) - VIEW_MARGIN_TILES, 0, ROWS-1);
+    const endRow   = clamp(Math.floor((camera.y + h) / TILE) + VIEW_MARGIN_TILES, 0, ROWS-1);
+
+    for(let y=startRow; y<=endRow; y++){
+      for(let x=startCol; x<=endCol; x++){
+        const t = tiles[y][x];
+        if(t===TYPES.EMPTY) continue;
+
+        const px = x*TILE - camera.x;
+        const py = y*TILE - camera.y;
+
+        ctx.fillStyle = tileColor(t,y,x);
+        ctx.fillRect(px,py,TILE,TILE);
+
+        const n = hash2(x,y);
+        const depth = clamp(y/ROWS,0,1);
+        const light = 0.22 + (1-depth)*0.22;
+
+        ctx.save();
+        ctx.globalAlpha = 0.10 + light*0.22;
+        ctx.fillStyle = (t===TYPES.COAL) ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.22)";
+        const s = 3 + Math.floor(n*3);
+        ctx.fillRect(px+2, py+2, s, 2);
+        ctx.fillRect(px+TILE-2-s, py+TILE-4, s, 2);
+        ctx.restore();
+
+        if(t===TYPES.GOLD || t===TYPES.DIAMOND || t===TYPES.SHARD || t===TYPES.CAKE){
+          ctx.save();
+          ctx.globalAlpha = 0.18;
+          const rg = ctx.createRadialGradient(px+TILE*0.35,py+TILE*0.35,0, px+TILE*0.35,py+TILE*0.35, TILE*0.9);
+          rg.addColorStop(0, "rgba(255,255,255,0.75)");
+          rg.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = rg;
+          ctx.fillRect(px,py,TILE,TILE);
+          ctx.restore();
+        }
+
+        ctx.strokeStyle="rgba(0,0,0,0.22)";
+        ctx.strokeRect(px+0.5,py+0.5,TILE-1,TILE-1);
+
+        if(t!==TYPES.BEDROCK){
+          const eff=effectiveHits(t)*80;
+          const hp=tileHP[y][x];
+          const dmgRatio = 1 - clamp(hp/eff,0,1);
+          if(dmgRatio>0.02){
+            ctx.save();
+            ctx.globalAlpha = 0.25 + dmgRatio*0.35;
+            ctx.strokeStyle="rgba(255,255,255,0.55)";
+            ctx.beginPath();
+            ctx.moveTo(px+2, py+TILE-2);
+            ctx.lineTo(px+TILE*(0.35+dmgRatio*0.2), py+TILE*(0.55-dmgRatio*0.2));
+            ctx.lineTo(px+TILE-2, py+2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        if(t===TYPES.COAL || t===TYPES.GOLD || t===TYPES.DIAMOND || t===TYPES.CAKE || t===TYPES.SHARD){
+          ctx.save();
+          ctx.font="12px var(--mono)";
+          ctx.fillStyle="rgba(0,0,0,0.55)";
+          const mark = (t===TYPES.COAL)?"T":(t===TYPES.GOLD)?"V":(t===TYPES.DIAMOND)?"K":(t===TYPES.CAKE)?"🍰":"🎁";
+          ctx.fillText(mark, px+5, py+15);
+          ctx.restore();
+        }
+      }
+    }
+
+    const sy = SKY_ROWS*TILE - camera.y;
+    ctx.save();
+    ctx.globalAlpha=0.9;
+    const gl = ctx.createLinearGradient(0,sy-6,0,sy+6);
+    gl.addColorStop(0,"rgba(88,208,255,0)");
+    gl.addColorStop(0.5,"rgba(88,208,255,0.20)");
+    gl.addColorStop(1,"rgba(88,208,255,0)");
+    ctx.strokeStyle=gl;
+    ctx.beginPath();
+    ctx.moveTo(0, sy+0.5);
+    ctx.lineTo(window.innerWidth, sy+0.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawShopSign(){
+    const x0 = shopZone.x0*TILE - camera.x;
+    const y0 = (SKY_ROWS-1)*TILE - camera.y;
+    const bw = (shopZone.x1 - shopZone.x0 + 1) * TILE;
+    const bh = TILE*2.2;
+
+    ctx.save();
+    const rg = ctx.createLinearGradient(x0,y0,x0,y0+bh);
+    rg.addColorStop(0,"rgba(88,208,255,0.18)");
+    rg.addColorStop(1,"rgba(88,208,255,0.06)");
+    ctx.fillStyle=rg;
+    ctx.strokeStyle="rgba(88,208,255,0.35)";
+    roundRect(ctx, x0, y0, bw, bh, 14);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle="rgba(8,12,20,0.55)";
+    ctx.strokeStyle="rgba(255,255,255,0.10)";
+    roundRect(ctx, x0+10, y0+10, 120, 44, 12);
+    ctx.fill(); ctx.stroke();
+
+    ctx.font="900 15px var(--sans)";
+    ctx.fillStyle="rgba(233,240,255,0.95)";
+    ctx.fillText("CỬA HÀNG", x0+18, y0+34);
+    ctx.font="12px var(--mono)";
+    ctx.fillStyle="rgba(233,240,255,0.82)";
+    ctx.fillText("Nhấn E", x0+18, y0+52);
+    ctx.restore();
+  }
+
+  function drawPlayer(){
+    const px = player.x - camera.x;
+    const py = player.y - camera.y;
+    const w = player.w, h = player.h;
+
+    ctx.save();
+    ctx.globalAlpha=0.35;
+    ctx.fillStyle="rgba(0,0,0,0.45)";
+    ctx.beginPath();
+    ctx.ellipse(px+w/2, py+h*0.98, w*0.44, h*0.18, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha=1;
+
+    const body = ctx.createLinearGradient(px,py,px+w,py+h);
+    body.addColorStop(0,"#ff3957");
+    body.addColorStop(0.55,"#ff2f4d");
+    body.addColorStop(1,"#a31228");
+    ctx.fillStyle=body;
+    roundRect(ctx, px, py+2, w, h-2, 9);
+    ctx.fill();
+
+    const metal = ctx.createLinearGradient(px,py,px,py+h);
+    metal.addColorStop(0,"rgba(255,255,255,0.22)");
+    metal.addColorStop(1,"rgba(255,255,255,0.05)");
+    ctx.fillStyle=metal;
+    roundRect(ctx, px+3, py+5, w*0.52, h*0.30, 8);
+    ctx.fill();
+
+    ctx.fillStyle="rgba(88,208,255,0.25)";
+    roundRect(ctx, px+6, py+10, w*0.30, h*0.18, 7);
+    ctx.fill();
+
+    ctx.fillStyle="rgba(10,12,18,0.45)";
+    roundRect(ctx, px+6, py+h*0.70, w-12, h*0.22, 10);
+    ctx.fill();
+
+    ctx.save();
+    ctx.globalAlpha=0.75;
+    ctx.fillStyle="rgba(255,255,255,0.10)";
+    const teeth = 6;
+    for (let i=0;i<teeth;i++){
+      const tx = px+10 + i*((w-20)/teeth);
+      ctx.fillRect(tx, py+h*0.74, 3, h*0.12);
+    }
+    ctx.restore();
+
+    ctx.save();
+    const drillX = px + w*0.68;
+    const drillY = py + h*0.34;
+    const drillW = w*0.28;
+    const drillH = h*0.32;
+    const dg = ctx.createLinearGradient(drillX, drillY, drillX+drillW, drillY+drillH);
+    dg.addColorStop(0,"rgba(18,22,34,0.78)");
+    dg.addColorStop(1,"rgba(0,0,0,0.45)");
+    ctx.fillStyle=dg;
+    roundRect(ctx, drillX, drillY, drillW, drillH, 8);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(px+w*0.96, py+h*0.50);
+    ctx.lineTo(px+w*0.86, py+h*0.36);
+    ctx.lineTo(px+w*0.86, py+h*0.64);
+    ctx.closePath();
+    ctx.fillStyle="rgba(255,255,255,0.12)";
+    ctx.fill();
+    ctx.restore();
+
+    const lg = ctx.createRadialGradient(px+w*0.22, py+h*0.30, 0, px+w*0.22, py+h*0.30, w*0.75);
+    lg.addColorStop(0,"rgba(88,208,255,0.28)");
+    lg.addColorStop(1,"rgba(88,208,255,0)");
+    ctx.globalAlpha=0.95;
+    ctx.fillStyle=lg;
+    ctx.fillRect(px-w,py-h,w*3,h*3);
+    ctx.globalAlpha=1;
+
+    ctx.strokeStyle="rgba(255,255,255,0.28)";
+    roundRect(ctx, px+0.5, py+2.5, w-1, h-3, 9);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawParticles(){
+    ctx.save();
+    for(const p of particles){
+      const x=p.x-camera.x, y=p.y-camera.y;
+      const a=1-(p.t/p.life);
+      ctx.globalAlpha=a*0.8;
+      let color="rgba(200,180,140,1)";
+      if(p.type===TYPES.COAL) color="rgba(85,85,95,1)";
+      if(p.type===TYPES.GOLD) color="rgba(235,205,90,1)";
+      if(p.type===TYPES.DIAMOND) color="rgba(120,240,255,1)";
+      if(p.type===TYPES.CAKE) color="rgba(255,130,200,1)";
+      if(p.type===TYPES.SHARD) color="rgba(175,145,255,1)";
+      ctx.fillStyle=color;
+      ctx.fillRect(x,y,p.size,p.size);
+    }
+    ctx.restore();
+
+    ctx.save();
+    for(const s of sparkles){
+      const x=s.x-camera.x, y=s.y-camera.y;
+      const a=1-(s.t/s.life);
+      ctx.globalAlpha = Math.max(0,a);
+      ctx.fillStyle = `hsla(${s.hue}, 95%, 70%, ${Math.max(0.25,a)})`;
+      ctx.fillRect(x,y,s.s,s.s);
+    }
+    ctx.restore();
+  }
+
+  function drawConfetti(){
+    if(confetti.length===0) return;
+    ctx.save();
+    for(const c of confetti){
+      const x=c.x-camera.x, y=c.y-camera.y;
+      const a=1-(c.t/c.life);
+      ctx.globalAlpha=Math.max(0,a);
+      ctx.fillStyle=`hsla(${c.hue}, 92%, 62%, ${Math.max(0.35,a)})`;
+      ctx.translate(x,y);
+      ctx.rotate(c.rot);
+      ctx.fillRect(-c.s/2,-c.s/2,c.s,c.s*0.7);
+      ctx.setTransform(1,0,0,1,0,0);
+    }
+    ctx.restore();
+  }
+
+  /* =========================
+     HUD (fuel hiển thị vô cực)
+  ========================= */
+  function updateHUD(){
+    fuelText.textContent = "∞";
+    fuelFill.style.width = "100%";
+    qsFuel.textContent = "∞";
+    qsFuelFill.style.width = "100%";
+
+    moneyText.textContent = "$" + save.money;
+    scoreText.textContent = String(player.score);
+    shardText.textContent = `${player.shards} / 5`;
+    bestText.textContent = String(save.bestScore);
+    qsMoney.textContent = "$" + save.money;
+
+    const mmW = Math.min(170, Math.floor(window.innerWidth*0.23));
+    const mmH = Math.min(250, Math.floor(window.innerHeight*0.31));
+    minimapCanvas.width = Math.max(110, mmW);
+    minimapCanvas.height = Math.max(160, mmH);
+  }
+
+  /* =========================
+     “Gợi ý mảnh quà” (shop buy)
+  ========================= */
+  let hintTimer = 0;
+  function hintNearestShard(seconds=8){
+    hintTimer = Math.max(hintTimer, seconds);
+    toast("🔎 Gợi ý", "Đang hiển thị hướng đến mảnh quà gần nhất…");
+  }
+  function findNearestShardDir(){
+    let best=null;
+    const px=Math.floor((player.x+player.w/2)/TILE);
+    const py=Math.floor((player.y+player.h/2)/TILE);
+    for(let y=0;y<ROWS;y++){
+      for(let x=0;x<COLS;x++){
+        if(tiles[y][x]===TYPES.SHARD){
+          const dx=x-px, dy=y-py;
+          const d=Math.abs(dx)+Math.abs(dy);
+          if(!best||d<best.d) best={dx,dy,d};
+        }
+      }
+    }
+    if(!best) return null;
+    const ax=Math.abs(best.dx), ay=Math.abs(best.dy);
+    if(ax>ay) return best.dx>0 ? "→" : "←";
+    return best.dy>0 ? "↓" : "↑";
+  }
+
+  /* =========================
+     GAME LOOP
+  ========================= */
+  let last=performance.now();
+  function tick(now){
+    const dt = Math.min(0.033, (now-last)/1000);
+    last=now;
+
+    for(let i=toasts.length-1;i>=0;i--){
+      toasts[i].t+=dt;
+      if(toasts[i].t>=toasts[i].life) toasts.splice(i,1);
+    }
+    renderToasts();
+
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      p.t+=dt;
+      p.vy += 520*dt;
+      p.x += p.vx*dt;
+      p.y += p.vy*dt;
+      if(p.t>=p.life) particles.splice(i,1);
+    }
+    for(let i=sparkles.length-1;i>=0;i--){
+      const s=sparkles[i];
+      s.t+=dt;
+      s.vy += s.g*dt;
+      s.x += s.vx*dt;
+      s.y += s.vy*dt;
+      if(s.t>=s.life) sparkles.splice(i,1);
+    }
+    for(let i=confetti.length-1;i>=0;i--){
+      const c=confetti[i];
+      c.t+=dt;
+      c.vy += c.g*dt;
+      c.x += c.vx*dt;
+      c.y += c.vy*dt;
+      c.rot += c.vr*dt;
+      if(c.t>=c.life) confetti.splice(i,1);
+    }
+
+    if(hintTimer>0) hintTimer=Math.max(0, hintTimer-dt);
+
+    if(gameState===STATE.PLAY) updatePlay(dt);
+    else if(gameState===STATE.VICTORY) updateVictory(dt);
+    else updateIdle(dt);
+
+    render();
+    justPressed.clear();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* =========================
+     UPDATE PLAY
+  ========================= */
+  function updatePlay(dt){
+    if(tapped("e") && inShopArea()) openShop();
+
+    const lv = save.upgrades.tocdo;
+    const accel = 1060 + lv*140;
+    const maxSpd = 185 + lv*26;
+
+    const g = 980;
+
+    const left = pressed("a") || pressed("arrowleft");
+    const right= pressed("d") || pressed("arrowright");
+    const up   = pressed("w") || pressed("arrowup");
+    const down = pressed("s") || pressed("arrowdown");
+
+    let ax=0, ay=0;
+    if(left) ax-=accel;
+    if(right) ax+=accel;
+    if(up) ay-=accel*0.75;
+    if(down) ay+=accel*0.35;
+
+    player.vx += ax*dt;
+    player.vy += ay*dt;
+    player.vy += g*dt;
+
+    player.vx *= Math.pow(0.0006, dt);
+    if(!up && !down) player.vy *= Math.pow(0.998, dt);
+
+    player.vx = clamp(player.vx, -maxSpd, maxSpd);
+    player.vy = clamp(player.vy, -560, 760);
+
+    const prevX=player.x;
+    player.x += player.vx*dt;
+    if(collides()){
+      player.x=prevX; player.vx=0;
+      if(mining.cooldown<=0){
+        if(left) tryMine(-1,0);
+        else if(right) tryMine(1,0);
+      }
+    }
+
+    const prevY=player.y;
+    player.y += player.vy*dt;
+    if(collides()){
+      player.y=prevY; player.vy=0;
+      if(mining.cooldown<=0){
+        if(up) tryMine(0,-1);
+        else if(down) tryMine(0,1);
+      }
+    }
+
+    mining.cooldown = Math.max(0, mining.cooldown - dt);
+
+    player.x = clamp(player.x, TILE+1, (COLS-2)*TILE - player.w - 1);
+    player.y = clamp(player.y, 0, (ROWS-2)*TILE - player.h - 1);
+
+    if(player.score > save.bestScore){
+      save.bestScore = player.score;
+      storeSave();
+    }
+
+    smoothFollow(dt);
+  }
+
+  function updateVictory(dt){
+    melodyTimer -= dt;
+    if(melodyTimer<=0){
+      const cx=camera.x+window.innerWidth/2;
+      const cy=camera.y+window.innerHeight*0.25;
+      spawnConfettiBurst(cx,cy,110);
+      melodyTimer = 0.9 + Math.random()*0.6;
+    }
+  }
+  function updateIdle(dt){
+    const targetX = clamp((COLS*TILE/2) - window.innerWidth/2, 0, Math.max(0, COLS*TILE - window.innerWidth));
+    const targetY = 0;
+    const k = 1 - Math.pow(0.001, dt);
+    camera.x += (targetX - camera.x)*k;
+    camera.y += (targetY - camera.y)*k;
+  }
+
+  /* =========================
+     RENDER
+  ========================= */
+  function render(){
+    ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+    drawBackground();
+
+    let sx=0, sy=0;
+    if(shakeT>0){
+      sx=(Math.random()*2-1)*shakePower;
+      sy=(Math.random()*2-1)*shakePower;
+    }
+    const camX = camera.x + sx;
+    const camY = camera.y + sy;
+
+    const ox=camera.x, oy=camera.y;
+    camera.x = camX; camera.y = camY;
+
+    drawWorld();
+    drawShopSign();
+    drawPlayer();
+    drawParticles();
+    drawConfetti();
+
+    // hint shop
+    if(gameState===STATE.PLAY && inShopArea()){
+      drawFloatingHint("Nhấn E để mở Cửa hàng", player.x+player.w/2, player.y-18);
+    }
+
+    // hint nearest shard (mua trong shop)
+    if(gameState===STATE.PLAY && hintTimer>0){
+      const dir = findNearestShardDir();
+      if(dir){
+        drawFloatingHint("Mảnh quà gần nhất: " + dir, player.x+player.w/2, player.y-42);
+      }
+    }
+
+    camera.x=ox; camera.y=oy;
+
+    updateHUD();
+    drawMinimap();
+  }
+
+  function drawFloatingHint(text, wx, wy){
+    const x = wx - camera.x;
+    const y = wy - camera.y;
+    ctx.save();
+    ctx.font="900 13px var(--sans)";
+    const w = ctx.measureText(text).width + 18;
+    const h = 26;
+    ctx.globalAlpha=0.96;
+    ctx.fillStyle="rgba(8,12,20,0.76)";
+    ctx.strokeStyle="rgba(88,208,255,0.35)";
+    roundRect(ctx, x-w/2, y-h, w, h, 12);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle="rgba(233,240,255,0.92)";
+    ctx.fillText(text, x-w/2+9, y-8);
+    ctx.restore();
+  }
+
+  /* =========================
+     MENU BUTTONS
+  ========================= */
+  document.getElementById("btnStart").addEventListener("click",()=>startGame({keepUpgrades:true}));
+  document.getElementById("btnHow").addEventListener("click",()=>setState(STATE.HOW));
+  document.getElementById("btnCredits").addEventListener("click",()=>setState(STATE.CREDITS));
+  document.getElementById("btnReset").addEventListener("click",()=>resetSave());
+
+  document.getElementById("btnHowBack").addEventListener("click",()=>setState(STATE.MENU));
+  document.getElementById("btnCreditsBack").addEventListener("click",()=>setState(STATE.MENU));
+
+  document.getElementById("btnPlayAgain").addEventListener("click",()=>startGame({keepUpgrades:true}));
+  document.getElementById("btnBackMenu").addEventListener("click",()=>setState(STATE.MENU));
+
+  function startGame({keepUpgrades=true}={}){
+    loadSave();
+    if(!keepUpgrades){
+      save.upgrades = defaultSave().upgrades;
+      save.money = 0;
+    }
+    genWorld();
+    applyStartStats();
+    setState(STATE.PLAY);
+    toast("Bắt đầu nào!", "Đã bỏ nhiên liệu hoàn toàn ✅ — Hãy đào đủ 5 Mảnh Quà 🎁");
+  }
+
+  /* =========================
+     INIT
+  ========================= */
+  genWorld();
+  applyStartStats();
+  setState(STATE.MENU);
+
+})();
+</script>
+</body>
+</html>
